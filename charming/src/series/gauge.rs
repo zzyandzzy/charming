@@ -108,6 +108,12 @@ pub struct GaugeTitle {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     offset_center: Option<(String, String)>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    color: Option<Color>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    font_weight: Option<String>,
 }
 
 impl GaugeTitle {
@@ -115,6 +121,8 @@ impl GaugeTitle {
         Self {
             show: None,
             offset_center: None,
+            color: None,
+            font_weight: None,
         }
     }
 
@@ -125,6 +133,16 @@ impl GaugeTitle {
 
     pub fn offset_center<S: Into<String>>(mut self, offset_center: (S, S)) -> Self {
         self.offset_center = Some((offset_center.0.into(), offset_center.1.into()));
+        self
+    }
+
+    pub fn color<C: Into<Color>>(mut self, color: C) -> Self {
+        self.color = Some(color.into());
+        self
+    }
+
+    pub fn font_weight<S: Into<String>>(mut self, font_weight: S) -> Self {
+        self.font_weight = Some(font_weight.into());
         self
     }
 }
@@ -238,6 +256,9 @@ pub struct Gauge {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     split_number: Option<f64>,
+    
+    #[serde(skip_serializing_if = "Option::is_none")]
+    item_style: Option<ItemStyle>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     radius: Option<String>,
@@ -290,6 +311,7 @@ impl Gauge {
             min: None,
             max: None,
             split_number: None,
+            item_style: None,
             radius: None,
             progress: None,
             axis_line: None,
@@ -361,6 +383,11 @@ impl Gauge {
 
     pub fn max<F: Into<f64>>(mut self, max: F) -> Self {
         self.max = Some(max.into());
+        self
+    }
+
+    pub fn item_style<F: Into<ItemStyle>>(mut self, item_style: F) -> Self {
+        self.item_style = Some(item_style.into());
         self
     }
 

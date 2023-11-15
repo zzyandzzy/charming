@@ -46,7 +46,7 @@ impl ImageRenderer {
         runtime
             .execute_script(
                 "[echarts.js]",
-                include_str!("../asset/echarts-5.4.2.min.js")
+                include_str!("../asset/echarts-5.4.3.min.js")
                     .to_string()
                     .into(),
             )
@@ -74,9 +74,18 @@ impl ImageRenderer {
         self
     }
 
-    /// Render chart to an SVG String
     pub fn render(&mut self, chart: &Chart) -> Result<String, EchartsError> {
+        let chart_str = chart.to_string();
+        self.render_str(&chart_str)
+    }
+
+    /// Render chart to an SVG String
+    pub fn render_str<S>(&mut self, input: S) -> Result<String, EchartsError>
+    where
+        S: AsRef<str>,
+    {
         let (theme, theme_source) = self.theme.to_str();
+        let char_str = input.as_ref();
         let code = Handlebars::new()
             .render_template(
                 CODE_TEMPLATE,
@@ -85,7 +94,7 @@ impl ImageRenderer {
                     "theme_source": theme_source,
                     "width": self.width,
                     "height": self.height,
-                    "chart_option": chart.to_string(),
+                    "chart_option": char_str,
                 }),
             )
             .expect("Failed to render template");
@@ -154,6 +163,16 @@ impl ImageRenderer {
         path: P,
     ) -> Result<(), EchartsError> {
         let svg = self.render(chart)?;
+        std::fs::write(path, svg)
+            .map_err(|error| EchartsError::ImageRenderingError(error.to_string()))
+    }
+
+    pub fn save_from_str<P, S>(&mut self, chart_str: S, path: P) -> Result<(), EchartsError>
+    where
+        P: AsRef<std::path::Path>,
+        S: AsRef<str>,
+    {
+        let svg = self.render_str(chart_str)?;
         std::fs::write(path, svg)
             .map_err(|error| EchartsError::ImageRenderingError(error.to_string()))
     }
