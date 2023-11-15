@@ -98,6 +98,11 @@ impl ImageRenderer {
                 }),
             )
             .expect("Failed to render template");
+        self.execute_script(code)
+    }
+
+    /// execute_script
+    pub fn execute_script(&mut self, code: String) -> Result<String, EchartsError> {
         let result = self.js_runtime.execute_script("[anon]", code.into());
 
         match result {
@@ -113,6 +118,24 @@ impl ImageRenderer {
             }
             Err(error) => Err(EchartsError::JsRuntimeError(error.to_string())),
         }
+    }
+
+    /// Render a chart to a given image format in bytes
+    pub fn render_format_script(
+        &mut self,
+        image_format: ImageFormat,
+        code: String,
+    ) -> Result<RgbaImage, EchartsError> {
+        let svg = self.execute_script(code)?;
+
+        let img = self.render_svg_to_buf(&svg)?;
+
+        // give buf initial capacity of: width * height * num of channels for RGBA + room for headers/metadata
+        let estimated_capacity = self.width * self.height * 4 + 1024;
+        let mut buf = Vec::with_capacity(estimated_capacity as usize);
+        img.write_to(&mut Cursor::new(&mut buf), image_format)
+            .map_err(|error| EchartsError::ImageRenderingError(error.to_string()))?;
+        Ok(img)
     }
 
     /// Render a chart to a given image format in bytes
@@ -173,6 +196,15 @@ impl ImageRenderer {
         S: AsRef<str>,
     {
         let svg = self.render_str(chart_str)?;
+        std::fs::write(path, svg)
+            .map_err(|error| EchartsError::ImageRenderingError(error.to_string()))
+    }
+
+    pub fn save_from_script<P>(&mut self, script: String, path: P) -> Result<(), EchartsError>
+    where
+        P: AsRef<std::path::Path>,
+    {
+        let svg = self.execute_script(script)?;
         std::fs::write(path, svg)
             .map_err(|error| EchartsError::ImageRenderingError(error.to_string()))
     }
