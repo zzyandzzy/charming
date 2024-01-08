@@ -9,6 +9,9 @@
         log: (...args) => {
             core.print(`[out]: ${argsToMessage(...args)}\n`, false);
         },
+        warn: (...args) => {
+            core.print(`[warn]: ${argsToMessage(...args)}\n`, true);
+        },
         error: (...args) => {
             core.print(`[err]: ${argsToMessage(...args)}\n`, true);
         },
